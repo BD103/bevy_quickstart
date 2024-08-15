@@ -1,17 +1,17 @@
 //! A splash screen that plays briefly at startup.
 
 use bevy::{
+    input::common_conditions::input_just_pressed,
     prelude::*,
     render::texture::{ImageLoaderSettings, ImageSampler},
 };
 
-use super::Screen;
-use crate::{theme::prelude::*, AppSet};
+use crate::{screens::Screen, theme::prelude::*, AppSet};
 
 pub(super) fn plugin(app: &mut App) {
     // Spawn splash screen.
     app.insert_resource(ClearColor(SPLASH_BACKGROUND_COLOR));
-    app.add_systems(OnEnter(Screen::Splash), spawn_splash);
+    app.add_systems(OnEnter(Screen::Splash), spawn_splash_screen);
 
     // Animate splash screen.
     app.add_systems(
@@ -35,13 +35,20 @@ pub(super) fn plugin(app: &mut App) {
         )
             .run_if(in_state(Screen::Splash)),
     );
+
+    // Exit the splash screen early if the player hits escape.
+    app.add_systems(
+        Update,
+        continue_to_loading_screen
+            .run_if(input_just_pressed(KeyCode::Escape).and_then(in_state(Screen::Splash))),
+    );
 }
 
 const SPLASH_BACKGROUND_COLOR: Color = Color::srgb(0.157, 0.157, 0.157);
 const SPLASH_DURATION_SECS: f32 = 1.8;
 const SPLASH_FADE_DURATION_SECS: f32 = 0.6;
 
-fn spawn_splash(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_splash_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .ui_root()
         .insert((
@@ -139,4 +146,8 @@ fn check_splash_timer(timer: ResMut<SplashTimer>, mut next_screen: ResMut<NextSt
     if timer.0.just_finished() {
         next_screen.set(Screen::Loading);
     }
+}
+
+fn continue_to_loading_screen(mut next_screen: ResMut<NextState<Screen>>) {
+    next_screen.set(Screen::Loading);
 }

@@ -1,15 +1,8 @@
 //! Helper traits for creating common widgets.
 
-use bevy::{
-    ecs::system::{EntityCommands, SystemId},
-    prelude::*,
-    ui::Val::*,
-};
+use bevy::{ecs::system::EntityCommands, prelude::*, ui::Val::*};
 
-use super::{
-    interaction::{InteractionPalette, OnPress},
-    palette::*,
-};
+use crate::theme::{interaction::InteractionPalette, palette::*};
 
 /// An extension trait for spawning UI widgets.
 pub trait Widgets {
@@ -93,31 +86,21 @@ impl<T: Spawn> Widgets for T {
     }
 
     fn label(&mut self, text: impl Into<String>) -> EntityCommands {
-        let mut entity = self.spawn((
+        let entity = self.spawn((
             Name::new("Label"),
-            NodeBundle {
-                style: Style {
-                    width: Px(500.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
+            TextBundle::from_section(
+                text,
+                TextStyle {
+                    font_size: 24.0,
+                    color: LABEL_TEXT,
                     ..default()
                 },
+            )
+            .with_style(Style {
+                width: Px(500.0),
                 ..default()
-            },
+            }),
         ));
-        entity.with_children(|children| {
-            children.spawn((
-                Name::new("Label Text"),
-                TextBundle::from_section(
-                    text,
-                    TextStyle {
-                        font_size: 24.0,
-                        color: LABEL_TEXT,
-                        ..default()
-                    },
-                ),
-            ));
-        });
         entity
     }
 }
